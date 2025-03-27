@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.zephyrtoria.hmdp.mapper.ShopMapper">
+
+    <resultMap id="BaseResultMap" type="com.github.zephyrtoria.hmdp.entity.Shop">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="typeId" column="type_id" />
+            <result property="images" column="images" />
+            <result property="area" column="area" />
+            <result property="address" column="address" />
+            <result property="x" column="x" />
+            <result property="y" column="y" />
+            <result property="avgPrice" column="avg_price" />
+            <result property="sold" column="sold" />
+            <result property="comments" column="comments" />
+            <result property="score" column="score" />
+            <result property="openHours" column="open_hours" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,type_id,images,area,address,
+        x,y,avg_price,sold,comments,
+        score,open_hours,create_time,update_time
+    </sql>
+</mapper>

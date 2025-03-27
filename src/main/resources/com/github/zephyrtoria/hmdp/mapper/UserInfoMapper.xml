@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.zephyrtoria.hmdp.mapper.UserInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.github.zephyrtoria.hmdp.entity.UserInfo">
+            <id property="userId" column="user_id" />
+            <result property="city" column="city" />
+            <result property="introduce" column="introduce" />
+            <result property="fans" column="fans" />
+            <result property="followee" column="followee" />
+            <result property="gender" column="gender" />
+            <result property="birthday" column="birthday" />
+            <result property="credits" column="credits" />
+            <result property="level" column="level" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        user_id,city,introduce,fans,followee,gender,
+        birthday,credits,level,create_time,update_time
+    </sql>
+</mapper>
