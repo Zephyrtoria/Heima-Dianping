@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -13,7 +14,8 @@ import java.time.LocalDateTime;
  */
 @TableName(value = "tb_shop_type")
 @Data
-public class ShopType {
+public class ShopType implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * 主键

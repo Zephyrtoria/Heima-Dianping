@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -13,8 +14,8 @@ import java.time.LocalDateTime;
  */
 @TableName(value = "tb_user_info")
 @Data
-public class UserInfo {
-
+public class UserInfo implements Serializable {
+    private static final long serialVersionUID = 1L;
     /**
      * 主键，用户id
      */

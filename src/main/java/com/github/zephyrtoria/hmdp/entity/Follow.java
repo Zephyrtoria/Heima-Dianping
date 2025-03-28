@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -12,7 +13,8 @@ import java.time.LocalDateTime;
  */
 @TableName(value = "tb_follow")
 @Data
-public class Follow {
+public class Follow implements Serializable {
+    private static final long serialVersionUID = 1L;
     /**
      * 主键
      */

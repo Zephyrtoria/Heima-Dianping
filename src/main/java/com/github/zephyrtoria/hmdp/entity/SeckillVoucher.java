@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -12,7 +13,8 @@ import java.time.LocalDateTime;
  */
 @TableName(value = "tb_seckill_voucher")
 @Data
-public class SeckillVoucher {
+public class SeckillVoucher implements Serializable {
+    private static final long serialVersionUID = 1L;
     /**
      * 关联的优惠券的id
      */

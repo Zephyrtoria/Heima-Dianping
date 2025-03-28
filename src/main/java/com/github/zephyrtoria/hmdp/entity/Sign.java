@@ -3,6 +3,7 @@ package com.github.zephyrtoria.hmdp.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -10,7 +11,8 @@ import java.util.Date;
  */
 @TableName(value = "tb_sign")
 @Data
-public class Sign {
+public class Sign implements Serializable {
+    private static final long serialVersionUID = 1L;
     private Long id;
 
     private Long userId;

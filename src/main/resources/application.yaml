@@ -10,10 +10,9 @@ spring:
     password: 123456
   data:
     redis:
-      host: 47.116.32.168
+      host: 172.30.138.31
       port: 6379
-      url: redis://123456@47.116.32.168:6379
-      # password: 123456
+      password: 123456
       lettuce:
         pool:
           max-active: 10

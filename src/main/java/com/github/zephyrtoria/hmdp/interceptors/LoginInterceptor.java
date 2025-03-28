@@ -1,33 +1,32 @@
 package com.github.zephyrtoria.hmdp.interceptors;
 
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.github.zephyrtoria.hmdp.entity.dto.UserDTO;
 import com.github.zephyrtoria.hmdp.utils.UserHolder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import static com.github.zephyrtoria.hmdp.consts.LoginConstants.LOGIN_USER_KEY;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static com.github.zephyrtoria.hmdp.consts.LoginConstants.*;
 
 public class LoginInterceptor implements HandlerInterceptor {
 
     // 进入controller之前
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 1. 获取session
-        HttpSession session = request.getSession();
-        // 2. 获取session中的用户
-        Object cacheUser = session.getAttribute(LOGIN_USER_KEY);
-        // 3. 判断用户是否存在
-        if (cacheUser == null) {
-            // 4.1 不存在则拦截
+        // 判断是否需要拦截（ThreadLocal中是否有用户）
+        if (UserHolder.getUser() == null) {
             response.setStatus(401);
             return false;
         }
-        // 4.2 存在，保存用户信息到 ThreadLocal
-        UserHolder.saveUser((UserDTO) cacheUser);
-        // 5. 放行
+        // 有用户，放行
         return HandlerInterceptor.super.preHandle(request, response, handler);
     }
 
