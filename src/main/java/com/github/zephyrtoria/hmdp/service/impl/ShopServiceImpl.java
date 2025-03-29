@@ -13,8 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.github.zephyrtoria.hmdp.consts.ShopConstants.SHOP_CACHE_REDIS_PREFIX;
-import static com.github.zephyrtoria.hmdp.consts.ShopConstants.SHOP_CACHE_TTL;
+import static com.github.zephyrtoria.hmdp.consts.ShopConstants.*;
 
 /**
  * @author 23240
@@ -33,19 +32,27 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop>
         // 1. 从 Redis 中查询商铺缓存
         // 因为商铺信息为静态，所以直接使用String存即可
         String shopKey = SHOP_CACHE_REDIS_PREFIX + id;
-        String shopJson = stringRedisTemplate.opsForValue().get(shopKey + id);
+        String shopJson = stringRedisTemplate.opsForValue().get(shopKey);
 
         // 2. 判断缓存是否命中
-        if (!StrUtil.isBlank(shopJson)) {
+        if (StrUtil.isNotBlank(shopJson)) {
             // 3. 缓存命中，返回商铺信息
             // 转回成对象
             Shop shop = JSONUtil.toBean(shopJson, Shop.class);
             return Result.ok(shop);
         }
+        // 不为null但无值，即""空字符串
+        if (shopJson != null) {
+            // 返回错误信息
+            return Result.fail("店铺不存在");
+        }
         // 4. 缓存未命中，查询数据库
         Shop shop = getById(id);
-        // 5. 数据库中商铺不存在，返回错误
+        // 5. 数据库中商铺不存在
         if (shop == null) {
+            // 写入空值
+            stringRedisTemplate.opsForValue().set(shopKey, "", SHOP_CACHE_NULL_TTL, TimeUnit.MINUTES);
+            // 返回错误
             return Result.fail("店铺不存在");
         }
         // 6. 数据库中商铺存在，写入 Redis 并返回
