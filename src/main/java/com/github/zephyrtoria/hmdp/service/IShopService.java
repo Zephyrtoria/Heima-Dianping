@@ -10,4 +10,6 @@ import com.github.zephyrtoria.hmdp.entity.result.Result;
 * @createDate 2025-03-27 13:33:15
 */
 public interface IShopService extends IService<Shop> {
+
+    Result queryById(Long id);
 }

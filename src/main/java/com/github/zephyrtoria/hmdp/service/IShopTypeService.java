@@ -2,6 +2,7 @@ package com.github.zephyrtoria.hmdp.service;
 
 import com.github.zephyrtoria.hmdp.entity.ShopType;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.zephyrtoria.hmdp.entity.result.Result;
 
 /**
 * @author 23240
@@ -10,4 +11,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface IShopTypeService extends IService<ShopType> {
 
+    Result queryList();
 }
