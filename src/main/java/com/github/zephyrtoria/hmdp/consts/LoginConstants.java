@@ -12,6 +12,6 @@ public class LoginConstants {
     // redis
     public static final String LOGIN_CODE_REDIS_PREFIX = "login:code:";
     public static final String LOGIN_USER_REDIS_PREFIX = "login:token:";
-    public static final Integer LOGIN_CODE_REDIS_TTL = 2;
-    public static final Integer LOGIN_USER_REDIS_TTL = 30;
+    public static final Long LOGIN_CODE_REDIS_TTL = 2L;
+    public static final Long LOGIN_USER_REDIS_TTL = 30L;
 }

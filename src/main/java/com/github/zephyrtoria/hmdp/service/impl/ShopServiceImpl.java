@@ -11,7 +11,10 @@ import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.TimeUnit;
+
 import static com.github.zephyrtoria.hmdp.consts.ShopConstants.SHOP_CACHE_REDIS_PREFIX;
+import static com.github.zephyrtoria.hmdp.consts.ShopConstants.SHOP_CACHE_TTL;
 
 /**
  * @author 23240
@@ -33,7 +36,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop>
         String shopJson = stringRedisTemplate.opsForValue().get(shopKey + id);
 
         // 2. 判断缓存是否命中
-        if (StrUtil.isBlank(shopJson)) {
+        if (!StrUtil.isBlank(shopJson)) {
             // 3. 缓存命中，返回商铺信息
             // 转回成对象
             Shop shop = JSONUtil.toBean(shopJson, Shop.class);
@@ -46,8 +49,21 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop>
             return Result.fail("店铺不存在");
         }
         // 6. 数据库中商铺存在，写入 Redis 并返回
-        stringRedisTemplate.opsForValue().set(shopKey, JSONUtil.toJsonStr(shop));
+        stringRedisTemplate.opsForValue().set(shopKey, JSONUtil.toJsonStr(shop), SHOP_CACHE_TTL, TimeUnit.MINUTES);
         return Result.ok(shop);
+    }
+
+    @Override
+    public Result updateShop(Shop shop) {
+        Long id = shop.getId();
+        if (id == null) {
+            return Result.fail("商铺ID错误");
+        }
+        // 1. 更新数据库
+        updateById(shop);
+        // 2. 删除缓存
+        stringRedisTemplate.delete(SHOP_CACHE_REDIS_PREFIX + id);
+        return Result.ok();
     }
 }
 

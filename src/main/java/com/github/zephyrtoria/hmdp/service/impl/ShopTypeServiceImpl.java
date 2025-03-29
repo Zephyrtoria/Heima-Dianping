@@ -38,8 +38,8 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType>
         if (shopTypesStr != null && !shopTypesStr.isEmpty()) {
             // 2. Redis中有，返回
             shopTypes = new ArrayList<>();
-            // shopTypesStr.forEach(each -> shopTypes.add(JSONUtil.toBean(each, ShopType.class)));
-            return Result.ok(shopTypesStr);
+            shopTypesStr.forEach(each -> shopTypes.add(JSONUtil.toBean(each, ShopType.class)));
+            return Result.ok(shopTypes);
         }
 
         // 3. Redis中无，查询数据库
@@ -50,7 +50,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType>
         }
         // 5. 数据库中有，保存到Redis
         shopTypes.forEach(each ->
-                stringRedisTemplate.opsForList().leftPush(SHOP_TYPE_CACHE_REDIS_KEY, JSONUtil.toJsonStr(each)));
+                stringRedisTemplate.opsForList().rightPush(SHOP_TYPE_CACHE_REDIS_KEY, JSONUtil.toJsonStr(each)));
         // 6. 返回
         return Result.ok(shopTypes);
     }

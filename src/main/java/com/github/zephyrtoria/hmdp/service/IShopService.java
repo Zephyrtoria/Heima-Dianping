@@ -12,4 +12,6 @@ import com.github.zephyrtoria.hmdp.entity.result.Result;
 public interface IShopService extends IService<Shop> {
 
     Result queryById(Long id);
+
+    Result updateShop(Shop shop);
 }
