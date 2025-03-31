@@ -11,4 +11,7 @@ public class ShopConstants {
     public static final String SHOP_LOCK_REDIS_PREFIX = "lock:shop:";
     public static final Long SHOP_LOCK_TTL = 10L;
     public static final Long SHOP_LOCK_SLEEP = 50L;
+
+    // logic expire ttl
+    public static final Long SHOP_LOGIC_EXPIRE = 30L;
 }
