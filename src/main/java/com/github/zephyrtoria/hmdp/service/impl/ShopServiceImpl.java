@@ -34,11 +34,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop>
     @Override
     public Result queryById(Long id) {
         // 缓存穿透实现
-        // Shop shop = redisClient.queryWithPassThrough(SHOP_CACHE_REDIS_PREFIX, id, Shop.class,
-        //         this::getById, SHOP_CACHE_NULL_TTL, TimeUnit.MINUTES);
+        Shop shop = redisClient.queryWithPassThrough(SHOP_CACHE_REDIS_PREFIX, id, Shop.class,
+                 this::getById, SHOP_CACHE_NULL_TTL, TimeUnit.MINUTES);
 
         // 逻辑过期解决缓存击穿实现
-        Shop shop = redisClient.queryWithLogicExpire(SHOP_CACHE_REDIS_PREFIX, id, Shop.class, this::getById, SHOP_CACHE_NULL_TTL, TimeUnit.MINUTES);
+        // Shop shop = redisClient.queryWithLogicExpire(SHOP_CACHE_REDIS_PREFIX, id, Shop.class, this::getById, SHOP_CACHE_NULL_TTL, TimeUnit.MINUTES);
         if (shop == null) {
             return Result.fail("店铺不存在");
         }

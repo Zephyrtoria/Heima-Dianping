@@ -154,7 +154,7 @@ public class RedisClient {
         // 4.实现缓存重建
         // 4.1.获取互斥锁
         String lockKey = SHOP_LOCK_REDIS_PREFIX + id;
-        R r = null;
+        R r;
         try {
             boolean isLock = tryLock(lockKey);
             // 4.2.判断是否获取成功
