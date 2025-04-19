@@ -9,13 +9,17 @@ import com.github.zephyrtoria.hmdp.service.ISeckillVoucherService;
 import com.github.zephyrtoria.hmdp.service.IVoucherOrderService;
 import com.github.zephyrtoria.hmdp.mapper.VoucherOrderMapper;
 import com.github.zephyrtoria.hmdp.utils.RedisIdWorker;
+import com.github.zephyrtoria.hmdp.utils.SimpleRedisLock;
 import com.github.zephyrtoria.hmdp.utils.UserHolder;
 import jakarta.annotation.Resource;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+
+import static com.github.zephyrtoria.hmdp.consts.OrderConstants.*;
 
 /**
  * @author 23240
@@ -34,6 +38,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Resource
     private RedisIdWorker redisIdWorker;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Result seckillVoucher(Long voucherId) {
@@ -64,14 +71,28 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
         Long userId = UserHolder.getUser().getId();
         // 用锁包裹事务，实现先提交事务再解锁的步骤
-        synchronized (userId.toString().intern()) {
+        // synchronized (userId.toString().intern())
+
+        // 现在使用分布式锁来实现
+        // 要注意名称的限定，要满足可以实现对于单个用户的锁，同时不影响其他用户，那么就必须要有一个唯一的标识符来区分 - userId
+        SimpleRedisLock lock = new SimpleRedisLock(REDIS_LOCK_PREFIX + userId, stringRedisTemplate);
+        boolean isLock = lock.tryLock(REDIS_LOCK_TTL);
+        // 判断锁获取是否成功
+        if (!isLock) {
+            // 获取失败，返回错误信息或重试（根据业务来定）
+            // 现在要求这个用户不能重复下单，所以不应该重试，直接返回错误信息
+            return Result.fail("不能重复购买！");
+        }
+
+        try {
             // Spring的事务注解依靠代理对象实现，但是此时方法的调用是通过this调用的，并非代理对象
             // 所以会导致事务失效
             // return this.createVoucher(voucherId);
-
             // 获取代理对象
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             return proxy.createVoucher(voucherId);
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -109,7 +130,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
         // 7. 创建订单
         VoucherOrder order = new VoucherOrder();
-        order.setId(redisIdWorker.nextId("order"));
+        order.setId(redisIdWorker.nextId(REDIS_NEXT_ID_PREFIX));
         order.setVoucherId(voucherId);
         order.setUserId(userId);
         save(order);

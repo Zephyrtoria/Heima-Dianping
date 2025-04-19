@@ -35,4 +35,4 @@ build/
 .mvn
 mvnw
 mvnw.cmd
-test/
+src/test/*
