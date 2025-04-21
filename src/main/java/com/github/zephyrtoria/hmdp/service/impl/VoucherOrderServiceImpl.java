@@ -12,6 +12,8 @@ import com.github.zephyrtoria.hmdp.utils.RedisIdWorker;
 import com.github.zephyrtoria.hmdp.utils.SimpleRedisLock;
 import com.github.zephyrtoria.hmdp.utils.UserHolder;
 import jakarta.annotation.Resource;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private RedissonClient redissonClient;
 
     @Override
     public Result seckillVoucher(Long voucherId) {
@@ -75,8 +80,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
         // 现在使用分布式锁来实现
         // 要注意名称的限定，要满足可以实现对于单个用户的锁，同时不影响其他用户，那么就必须要有一个唯一的标识符来区分 - userId
-        SimpleRedisLock lock = new SimpleRedisLock(REDIS_LOCK_PREFIX + userId, stringRedisTemplate);
-        boolean isLock = lock.tryLock(REDIS_LOCK_TTL);
+        // SimpleRedisLock lock = new SimpleRedisLock(REDIS_LOCK_PREFIX + userId, stringRedisTemplate);
+        // boolean isLock = lock.tryLock(REDIS_LOCK_TTL);
+        // 使用Redisson进行锁操作
+        RLock lock = redissonClient.getLock(REDIS_LOCK_PREFIX + userId);
+        boolean isLock = lock.tryLock();
         // 判断锁获取是否成功
         if (!isLock) {
             // 获取失败，返回错误信息或重试（根据业务来定）
