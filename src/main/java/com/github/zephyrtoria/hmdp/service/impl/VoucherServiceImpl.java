@@ -8,21 +8,27 @@ import com.github.zephyrtoria.hmdp.service.ISeckillVoucherService;
 import com.github.zephyrtoria.hmdp.service.IVoucherService;
 import com.github.zephyrtoria.hmdp.mapper.VoucherMapper;
 import jakarta.annotation.Resource;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static com.github.zephyrtoria.hmdp.consts.SeckillConstants.SECKILL_STOCK_PREFIX;
+
 /**
-* @author 23240
-* @description 针对表【tb_voucher】的数据库操作Service实现
-* @createDate 2025-03-27 13:33:15
-*/
+ * @author 23240
+ * @description 针对表【tb_voucher】的数据库操作Service实现
+ * @createDate 2025-03-27 13:33:15
+ */
 @Service
 public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> implements IVoucherService {
 
     @Resource
     private ISeckillVoucherService seckillVoucherService;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Result queryVoucherOfShop(Long shopId) {
@@ -44,6 +50,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         seckillVoucher.setBeginTime(voucher.getBeginTime());
         seckillVoucher.setEndTime(voucher.getEndTime());
         seckillVoucherService.save(seckillVoucher);
+        // 保存秒杀库存到库存
+        stringRedisTemplate.opsForValue().set(SECKILL_STOCK_PREFIX + voucher.getId(), voucher.getStock().toString());
     }
 }
 

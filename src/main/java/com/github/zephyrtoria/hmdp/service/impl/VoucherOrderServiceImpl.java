@@ -1,27 +1,24 @@
 package com.github.zephyrtoria.hmdp.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.github.zephyrtoria.hmdp.entity.SeckillVoucher;
 import com.github.zephyrtoria.hmdp.entity.VoucherOrder;
 import com.github.zephyrtoria.hmdp.entity.result.Result;
-import com.github.zephyrtoria.hmdp.mapper.SeckillVoucherMapper;
+import com.github.zephyrtoria.hmdp.mapper.VoucherOrderMapper;
 import com.github.zephyrtoria.hmdp.service.ISeckillVoucherService;
 import com.github.zephyrtoria.hmdp.service.IVoucherOrderService;
-import com.github.zephyrtoria.hmdp.mapper.VoucherOrderMapper;
 import com.github.zephyrtoria.hmdp.utils.RedisIdWorker;
-import com.github.zephyrtoria.hmdp.utils.SimpleRedisLock;
 import com.github.zephyrtoria.hmdp.utils.UserHolder;
 import jakarta.annotation.Resource;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.aop.framework.AopContext;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 
-import static com.github.zephyrtoria.hmdp.consts.OrderConstants.*;
+import static com.github.zephyrtoria.hmdp.consts.OrderConstants.REDIS_NEXT_ID_PREFIX;
 
 /**
  * @author 23240
@@ -47,7 +44,38 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     private RedissonClient redissonClient;
 
+    private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
+
+    static {
+        SECKILL_SCRIPT = new DefaultRedisScript<>();
+        // 指定脚本，使用 ClassPathResource()会默认在resource文件夹下寻找资源
+        SECKILL_SCRIPT.setLocation(new ClassPathResource("seckill.lua"));
+        SECKILL_SCRIPT.setResultType(Long.class);
+    }
+
     @Override
+    public Result seckillVoucher(Long voucherId) {
+        // 1. 执行lua脚本
+        Long userId = UserHolder.getUser().getId();
+        Long flag = stringRedisTemplate.execute(
+                SECKILL_SCRIPT,
+                Collections.emptyList(),  // keys 为空集合，但是不能传null
+                voucherId.toString(), userId.toString()
+        );
+
+        // 2. 判断返回值
+        // 2.1 不为0，没有购买资格
+        if (flag != 0L) {
+            return Result.fail(flag == 1L ? "库存不足" : "不能重复下单");
+        }
+        // 2.2 为0，有购买资格，把下单信息保存到阻塞队列
+        long orderId = redisIdWorker.nextId(REDIS_NEXT_ID_PREFIX);
+
+        // 3. 返回订单ID
+        return Result.ok(orderId);
+    }
+
+/*    @Override
     public Result seckillVoucher(Long voucherId) {
         // 1. 查询优惠券
         SeckillVoucher findVoucher = seckillVoucherService.getById(voucherId);
@@ -97,12 +125,13 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             // 所以会导致事务失效
             // return this.createVoucher(voucherId);
             // 获取代理对象
+            // TODO
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             return proxy.createVoucher(voucherId);
         } finally {
             lock.unlock();
         }
-    }
+    }*/
 
     // synchronized 加在方法上 - 对于当前（this）生效
     // 事务注解
