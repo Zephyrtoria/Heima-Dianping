@@ -4,11 +4,9 @@ package com.github.zephyrtoria.hmdp.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.zephyrtoria.hmdp.consts.SystemConstants;
 import com.github.zephyrtoria.hmdp.entity.Blog;
-import com.github.zephyrtoria.hmdp.entity.User;
 import com.github.zephyrtoria.hmdp.entity.result.Result;
 import com.github.zephyrtoria.hmdp.entity.dto.UserDTO;
 import com.github.zephyrtoria.hmdp.service.IBlogService;
-import com.github.zephyrtoria.hmdp.service.IUserService;
 import com.github.zephyrtoria.hmdp.utils.UserHolder;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
@@ -41,9 +39,7 @@ public class BlogController {
     @PutMapping("/like/{id}")
     public Result likeBlog(@PathVariable("id") Long id) {
         // 修改点赞数量
-        blogService.update()
-                .setSql("liked = liked + 1").eq("id", id).update();
-        return Result.ok();
+        return blogService.likeBlogById(id);
     }
 
     @GetMapping("/of/me")
@@ -67,5 +63,10 @@ public class BlogController {
     @GetMapping("/{id}")
     public Result getBlogById(@PathVariable("id") Long id) {
         return blogService.getBlogById(id);
+    }
+
+    @GetMapping("/likes/{id}")
+    public Result queryBlogLikes(@PathVariable("id") Long id) {
+        return blogService.getLikes(id);
     }
 }
