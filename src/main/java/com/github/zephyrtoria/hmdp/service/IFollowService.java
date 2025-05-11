@@ -2,6 +2,7 @@ package com.github.zephyrtoria.hmdp.service;
 
 import com.github.zephyrtoria.hmdp.entity.Follow;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.zephyrtoria.hmdp.entity.result.Result;
 
 /**
 * @author 23240
@@ -10,4 +11,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface IFollowService extends IService<Follow> {
 
+    Result setFollower(Long followUserId, Boolean isFollow);
+
+    Result isFollowing(Long followUserId);
 }
