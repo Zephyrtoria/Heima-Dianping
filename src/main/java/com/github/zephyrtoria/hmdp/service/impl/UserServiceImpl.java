@@ -12,17 +12,21 @@ import com.github.zephyrtoria.hmdp.entity.result.Result;
 import com.github.zephyrtoria.hmdp.mapper.UserMapper;
 import com.github.zephyrtoria.hmdp.service.IUserService;
 import com.github.zephyrtoria.hmdp.utils.RegexUtils;
+import com.github.zephyrtoria.hmdp.utils.UserHolder;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.github.zephyrtoria.hmdp.consts.LoginConstants.*;
+import static com.github.zephyrtoria.hmdp.consts.RedisConstants.USER_SIGN_PREFIX;
 import static com.github.zephyrtoria.hmdp.consts.SystemConstants.USER_NICK_NAME_PREFIX;
 
 /**
@@ -95,6 +99,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         stringRedisTemplate.expire(tokenKey, LOGIN_USER_REDIS_TTL, TimeUnit.MINUTES);
         // 6. 返回token
         return Result.ok(token);
+    }
+
+    @Override
+    public Result sign() {
+        // 1. 获取用户信息
+        Long userId = UserHolder.getUser().getId();
+
+        // 2. 获取日期
+        LocalDateTime now = LocalDateTime.now();
+
+        // 3. 拼接key
+        String keySuffix = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        String key = USER_SIGN_PREFIX + keySuffix;
+
+        // 4. 计算今日是本月的第几日
+        int dayOfMonth = now.getDayOfMonth();
+
+        // 5. 写入Redis：SETBIT key offset 1
+        stringRedisTemplate.opsForValue().setBit(key, dayOfMonth - 1, true);
+
+        return Result.ok();
     }
 
     private User createUserWithPhone(String phone) {
