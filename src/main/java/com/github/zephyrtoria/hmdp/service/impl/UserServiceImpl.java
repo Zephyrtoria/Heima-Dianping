@@ -16,12 +16,14 @@ import com.github.zephyrtoria.hmdp.utils.UserHolder;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -110,7 +112,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         LocalDateTime now = LocalDateTime.now();
 
         // 3. 拼接key
-        String keySuffix = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        String keySuffix = userId + now.format(DateTimeFormatter.ofPattern("yyyyMM"));
         String key = USER_SIGN_PREFIX + keySuffix;
 
         // 4. 计算今日是本月的第几日
@@ -120,6 +122,53 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         stringRedisTemplate.opsForValue().setBit(key, dayOfMonth - 1, true);
 
         return Result.ok();
+    }
+
+    @Override
+    public Result signCount() {
+        // 1. 获取用户信息
+        Long userId = UserHolder.getUser().getId();
+
+        // 2. 获取日期
+        LocalDateTime now = LocalDateTime.now();
+
+        // 3. 拼接key
+        String keySuffix = userId + now.format(DateTimeFormatter.ofPattern("yyyyMM"));
+        String key = USER_SIGN_PREFIX + keySuffix;
+
+        // 4. 计算今日是本月的第几日
+        int dayOfMonth = now.getDayOfMonth();
+
+        // 5. 获取本月截止今日的所有签到记录
+        List<Long> result = stringRedisTemplate.opsForValue().bitField(
+                key,
+                BitFieldSubCommands.create()
+                        .get(BitFieldSubCommands.BitFieldType.unsigned(dayOfMonth))
+                        .valueAt(0)
+        );
+        if (result == null || result.isEmpty()) {
+            return Result.ok(0);
+        }
+
+        Long num = result.get(0);
+        if (num == null || num == 0) {
+            return Result.ok(0);
+        }
+
+        // 6. 计算从今日开始向前的连续签到数
+        int count = 0;
+        while (true) {
+            // 与1与运算，得到末位值，判断是否为1
+            if ((num & 1) == 0) {
+                // 终止
+                break;
+            } else {
+                count++;
+                num >>>= 1;
+            }
+        }
+
+        return Result.ok(count);
     }
 
     private User createUserWithPhone(String phone) {
